@@ -91,7 +91,7 @@ To publish to a Github Packages, like this.
 ```bash
 $ echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
 $ ./gradlew clean jar
-$ ./gradlew jib -Djib.container.labels="$(git rev-parse HEAD)"
+$ ./gradlew jib -Djib.container.labels="version.backlog-github-integration-action=$(git rev-parse HEAD)"
 ```
 
 Confirm a docker image has the git revision label.
@@ -99,4 +99,7 @@ Confirm a docker image has the git revision label.
 ```bash
 $ docker pull ghcr.io/kazamori/backlog-github-integration-action:latest
 $ docker inspect ghcr.io/kazamori/backlog-github-integration-action:latest | jq '.[].Config.Labels'
+{
+  "version.backlog-github-integration-action": "4c97539929bcd3e9af1989fe03e6dbc9b3851d3e"
+}
 ```

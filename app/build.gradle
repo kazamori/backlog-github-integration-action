@@ -106,6 +106,10 @@ jib {
     tags = []
   }
   container {
+    jvmFlags = [
+        "--add-opens", "java.base/sun.net.www.protocol.https=ALL-UNNAMED",
+        "--add-opens", "java.base/java.net=ALL-UNNAMED"
+    ]
     labels = [
       'org.opencontainers.image.description': "GitHub custom action integrates with Nulab's backlog",
       'org.opencontainers.image.licenses': 'Apache-2.0',

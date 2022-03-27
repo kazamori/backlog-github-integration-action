@@ -34,7 +34,11 @@ public class GitHubClientCli implements Runnable {
     public void run() {
         val locale = ConfigUtil.getLocale(this.config);
         val client = GitHubClient.create(this.config);
-        val info = client.getIssueIds(this.repository, this.prNumber);
+        val info = client.getPullRequestInfo(this.repository, this.prNumber);
+        if (info.getIssueIds().isEmpty()) {
+            logger.info("There are no issues related to the pull request");
+            return;
+        }
         logger.info(" * link: {}", info.makeLink());
         logger.info(" * comment: {}", info.makeComment(locale));
     }

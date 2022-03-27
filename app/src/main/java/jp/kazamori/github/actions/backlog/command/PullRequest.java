@@ -47,7 +47,7 @@ public class PullRequest implements Runnable {
         val config = this.githubClient.getConfig();
         val locale = ConfigUtil.getLocale(config);
         val util = new BacklogClientUtil(config, this.backlogClient);
-        val info = this.githubClient.getIssueIds(this.repository, this.prNumber);
+        val info = this.githubClient.getPullRequestInfo(this.repository, this.prNumber);
         for (var id : info.getIssueIds()) {
             val issue = this.backlogClient.getIssue(id);
 

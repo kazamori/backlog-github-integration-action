@@ -55,7 +55,7 @@ public class GitHubClient {
     }
 
     @SneakyThrows
-    public PullRequestInfo getIssueIds(String repository, int prNumber) {
+    public PullRequestInfo getPullRequestInfo(String repository, int prNumber) {
         val repo = this.client.getRepository(repository);
         val pr = repo.getPullRequest(prNumber);
         val messages = this.getCommitMessages(pr);

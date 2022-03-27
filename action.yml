@@ -1,0 +1,14 @@
+name: 'Backlog-GitHub integration action'
+description: "integrates with Nulab's backlog via GitHub events"
+inputs:
+  subcommand:
+    required: true
+    description: 'sub command to invoke'
+  args:
+    description: 'arguments for sub command'
+runs:
+  using: 'docker'
+  image: 'docker://ghcr.io/kazamori/backlog-github-integration-action:latest'
+  args:
+    - ${{ inputs.subcommand }}
+    - ${{ inputs.args }}

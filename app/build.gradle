@@ -1,6 +1,10 @@
 plugins {
     id 'application'
+    id 'com.google.cloud.tools.jib' version '3.2.0'
 }
+
+sourceCompatibility = 1.17
+targetCompatibility = 1.17
 
 repositories {
     mavenCentral()
@@ -62,4 +66,43 @@ tasks.withType(JavaExec) {
     jvmArgs += 'java.base/sun.net.www.protocol.https=ALL-UNNAMED'
     jvmArgs += '--add-opens'
     jvmArgs += 'java.base/java.net=ALL-UNNAMED'
+}
+
+jar {
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  manifest {
+    attributes(
+      'Artifact-Id': archivesBaseName,
+      'Main-Class': 'jp.kazamori.github.actions.backlog.Main'
+    )
+  }
+  from {
+    configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+  }
+}
+
+jib {
+  from {
+    image = 'eclipse-temurin:17-jre-alpine'
+    platforms {
+      platform {
+        architecture = 'amd64'
+        os = 'linux'
+      }
+    }
+  }
+  to {
+    image = 'ghcr.io/kazamori/backlog-github-integration-action'
+    tags = []
+  }
+  container {
+    labels = [
+      'org.opencontainers.image.description': "GitHub custom action integrates with Nulab's backlog",
+      'org.opencontainers.image.licenses': 'Apache-2.0',
+      'org.opencontainers.image.source': 'https://github.com/kazamori/backlog-github-integration-action',
+      'org.opencontainers.image.title': 'backlog-github-integration-action',
+      'org.opencontainers.image.url': 'https://github.com/kazamori/backlog-github-integration-action/pkgs/container/backlog-github-integration-action'
+    ]
+    format = 'OCI'
+  }
 }

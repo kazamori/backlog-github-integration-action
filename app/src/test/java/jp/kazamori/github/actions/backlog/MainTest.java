@@ -13,9 +13,9 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 class MainTest {
     static Stream<Arguments> makeArgsData() {
         return Stream.of(
-                arguments(new String[]{"a", "b", "c"}, 3, "b"),
-                arguments(new String[]{"a b c"}, 3, "b"),
-                arguments(new String[]{"a", "b b", "d"}, 3, "b b")
+                arguments(new String[]{"subcommand", "a", "b", "c"}, 4, "b"),
+                arguments(new String[]{"subcommand", "a b c"}, 4, "b"),
+                arguments(new String[]{"subcommand", "a", "b b", "d"}, 4, "b b")
         );
     }
 
@@ -24,6 +24,7 @@ class MainTest {
     void ensureArgumentsIsNotQuoted(String[] args, int expectedLength, String second) {
         val actual = Main.ensureArgumentsIsNotQuoted(args);
         assertEquals(expectedLength, actual.length);
-        assertEquals(second, actual[1]);
+        assertEquals(args[0], actual[0]);
+        assertEquals(second, actual[2]);
     }
 }

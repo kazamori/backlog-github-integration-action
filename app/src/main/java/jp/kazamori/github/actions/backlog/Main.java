@@ -1,6 +1,7 @@
 package jp.kazamori.github.actions.backlog;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ObjectArrays;
 import com.typesafe.config.ConfigFactory;
 import jp.kazamori.github.actions.backlog.client.BacklogClientUtil;
 import jp.kazamori.github.actions.backlog.client.GitHubClient;
@@ -19,12 +20,12 @@ public class Main {
     @VisibleForTesting
     static String[] ensureArgumentsIsNotQuoted(String[] args) {
         // for GitHub Actions
-        // it takes inputs as a single string
-        // like "--repository kazamori/backlog-github-integration-action --pr-number 1"
-        if (args.length != 1) {
+        // it takes inputs as two strings like below
+        // "pull_request" "--repository kazamori/backlog-github-integration-action --pr-number 1"
+        if (args.length != 2) {
             return args;
         }
-        return args[0].split(" ");
+        return ObjectArrays.concat(new String[]{args[0]}, args[1].split(" "), String.class);
     }
 
     public static void main(String[] args) {

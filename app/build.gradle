@@ -3,8 +3,8 @@ plugins {
     id 'com.google.cloud.tools.jib' version '3.2.0'
 }
 
-sourceCompatibility = 1.17
-targetCompatibility = 1.17
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 repositories {
     mavenCentral()

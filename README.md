@@ -74,12 +74,12 @@ Confirm the target image can be run.
 ```bash
 $ docker run \
     --rm \
-    --env APP_LOCALE=${APP_LOCALE} \
-    --env APP_LOG_LEVEL=${APP_LOG_LEVEL} \
-    --env BACKLOG_API_KEY=${BACKLOG_API_KEY} \
-    --env BACKLOG_FQDN=${BACKLOG_FQDN} \
-    --env BACKLOG_PROJECT_KEY=${BACKLOG_PROJECT_KEY} \
-    --env GITHUB_TOKEN=${GITHUB_TOKEN} \
+    --env APP_LOCALE \
+    --env APP_LOG_LEVEL \
+    --env BACKLOG_API_KEY \
+    --env BACKLOG_FQDN \
+    --env BACKLOG_PROJECT_KEY \
+    --env GITHUB_TOKEN \
     ghcr.io/kazamori/backlog-github-integration-action \
         pull_request --repository kazamori/backlog-github-integration-action --pr-number 1
 ```

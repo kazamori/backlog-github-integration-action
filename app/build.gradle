@@ -1,0 +1,65 @@
+plugins {
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // app
+    implementation 'com.nulab-inc:backlog4j:2.4.4'
+    implementation 'com.typesafe:config:1.4.2'
+    implementation 'info.picocli:picocli:4.6.3'
+    implementation 'org.kohsuke:github-api:1.303'
+
+    // logging
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'org.slf4j:slf4j-simple:1.7.36'
+
+    // build
+    implementation 'com.google.guava:guava:30.1.1-jre'
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    // testing
+    testCompileOnly 'org.projectlombok:lombok:1.18.22'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+    // mock
+    testImplementation 'org.mockito:mockito-core:4.4.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.4.0'
+}
+
+testing {
+    suites {
+        test {
+            useJUnitJupiter('5.8.1')
+        }
+    }
+}
+
+application {
+    mainClass = 'jp.kazamori.github.actions.backlog.Main'
+}
+
+task githubClient(type: JavaExec) {
+    mainClass = 'jp.kazamori.github.actions.backlog.cli.GitHubClientCli'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task backlogClient(type: JavaExec) {
+    mainClass = 'jp.kazamori.github.actions.backlog.cli.BacklogClientCli'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task config(type: JavaExec) {
+    mainClass = 'jp.kazamori.github.actions.backlog.cli.ConfigCli'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs += '--add-opens'
+    jvmArgs += 'java.base/sun.net.www.protocol.https=ALL-UNNAMED'
+    jvmArgs += '--add-opens'
+    jvmArgs += 'java.base/java.net=ALL-UNNAMED'
+}

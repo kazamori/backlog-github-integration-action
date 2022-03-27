@@ -11,21 +11,21 @@ import java.net.MalformedURLException;
 public enum BacklogDomain {
     BACKLOG_COM("backlog.com") {
         @Override
-        BacklogConfigure get(String spaceKey, String apiKey) throws MalformedURLException {
+        BacklogConfigure getConfigure(String spaceKey, String apiKey) throws MalformedURLException {
             return new BacklogComConfigure(spaceKey).apiKey(apiKey);
         }
     },
 
     BACKLOG_TOOL("backlogtool.com") {
         @Override
-        BacklogConfigure get(String spaceKey, String apiKey) throws MalformedURLException {
+        BacklogConfigure getConfigure(String spaceKey, String apiKey) throws MalformedURLException {
             return new BacklogToolConfigure(spaceKey).apiKey(apiKey);
         }
     },
 
     BACKLOG_JP("backlog.jp") {
         @Override
-        BacklogConfigure get(String spaceKey, String apiKey) throws MalformedURLException {
+        BacklogConfigure getConfigure(String spaceKey, String apiKey) throws MalformedURLException {
             return new BacklogJpConfigure(spaceKey).apiKey(apiKey);
         }
     };
@@ -40,12 +40,12 @@ public enum BacklogDomain {
         return this.domainName;
     }
 
-    abstract BacklogConfigure get(String spaceKey, String apiKey) throws MalformedURLException;
+    abstract BacklogConfigure getConfigure(String spaceKey, String apiKey) throws MalformedURLException;
 
     public static BacklogDomain fromDomainName(String domainName) {
-        for (var config : BacklogDomain.values()) {
-            if (config.getDomainName().equalsIgnoreCase(domainName)) {
-                return config;
+        for (var domain : BacklogDomain.values()) {
+            if (domain.getDomainName().equalsIgnoreCase(domainName)) {
+                return domain;
             }
         }
         throw new IllegalArgumentException(String.format("Not supported domain: %s", domainName));
@@ -57,7 +57,8 @@ public enum BacklogDomain {
             throw new IllegalArgumentException(String.format("Invalid domain name: %s", fqdn));
         }
         val spaceKey = domainNames[0];
-        var config = BacklogDomain.fromDomainName(String.format("%s.%s", domainNames[1], domainNames[2]));
-        return config.get(spaceKey, apiKey);
+        val domainName = String.format("%s.%s", domainNames[1], domainNames[2]);
+        var domain = BacklogDomain.fromDomainName(domainName);
+        return domain.getConfigure(spaceKey, apiKey);
     }
 }

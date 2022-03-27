@@ -114,7 +114,7 @@ public class BacklogClientUtil {
         val description = currentDescription + this.getLineBreak(lastLine) + text;
         val params = new UpdateIssueParams(issue.getId())
                 .description(description);
-        client.updateIssue(params);
+        this.client.updateIssue(params);
     }
 
     public void updateCustomFieldOfIssue(Issue issue, String fieldName, String addValue) {
@@ -131,7 +131,7 @@ public class BacklogClientUtil {
                 val customFiledValue = new CustomFiledValue(field.getId(), value);
                 val params = new UpdateIssueParams(issue.getId())
                         .customFieldOtherValue(customFiledValue);
-                client.updateIssue(params);
+                this.client.updateIssue(params);
                 return;
             }
             logger.error("Supported custom field is TextAreaCustomField only");

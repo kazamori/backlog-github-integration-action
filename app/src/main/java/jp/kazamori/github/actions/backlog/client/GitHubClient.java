@@ -59,7 +59,7 @@ public class GitHubClient {
         val repo = this.client.getRepository(repository);
         val pr = repo.getPullRequest(prNumber);
         val messages = this.getCommitMessages(pr);
-        val key = config.getString(BacklogConfigKey.PROJECT_KEY.get());
+        val key = this.config.getString(BacklogConfigKey.PROJECT_KEY.get());
         val issueIds = this.searchIssueIds(messages, key);
         val info = new PullRequestInfo(pr.getTitle(), pr.getHtmlUrl(), issueIds);
         logger.info(" * info: {}", info);

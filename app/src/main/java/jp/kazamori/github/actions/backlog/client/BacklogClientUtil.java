@@ -81,7 +81,7 @@ public class BacklogClientUtil {
         return this.hasSameValue(currentValue.split("\\n"), addValue);
     }
 
-    private static final Pattern LIST_LINE = Pattern.compile("^(\s*\\*|-\s)");
+    private static final Pattern LIST_LINE = Pattern.compile("^(\\s*\\*|-\\s)");
 
     @VisibleForTesting
     String getLineBreak(Optional<String> lastLine) {

@@ -1,6 +1,7 @@
 package jp.kazamori.github.actions.backlog.client;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.nulabinc.backlog4j.*;
 import com.nulabinc.backlog4j.api.option.CustomFiledValue;
 import com.nulabinc.backlog4j.api.option.UpdateIssueParams;
@@ -78,7 +79,7 @@ public class BacklogClientUtil {
 
     @VisibleForTesting
     boolean hasSameValue(String currentValue, String addValue) {
-        if (currentValue == null) {
+        if (Strings.isNullOrEmpty(currentValue)) {
             return false;
         }
         return this.hasSameValue(currentValue.split("\\n"), addValue);
@@ -105,7 +106,7 @@ public class BacklogClientUtil {
     }
 
     public void updateDescriptionOfIssue(Issue issue, String text) {
-        val currentDescription = issue.getDescription();
+        val currentDescription = Optional.ofNullable(issue.getDescription()).orElse("");
         val currentValues = currentDescription.split("\\n");
         if (this.hasSameValue(currentValues, text)) {
             logger.info("Current description has already same text: {}", text);
@@ -125,7 +126,8 @@ public class BacklogClientUtil {
         if (opt.isPresent()) {
             val field = opt.get();
             if (field instanceof TextAreaCustomField) {
-                val currentValue = ((TextAreaCustomField) field).getValue();
+                val fieldValue = ((TextAreaCustomField) field).getValue();
+                val currentValue = Optional.ofNullable(fieldValue).orElse("");
                 if (this.hasSameValue(currentValue, addValue)) {
                     logger.info("Current value has already same text: {}", addValue);
                     return;

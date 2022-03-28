@@ -15,11 +15,11 @@ public class PullRequestInfo {
     private final URL url;
     private final Set<String> issueIds;
 
-    private static final String prCreated = "pr.created";
+    private static final String PR_CREATED = "pr.created";
 
     public String makeComment(Locale locale) {
         val bundle = ResourceBundle.getBundle(AppConst.BUNDLE_MESSAGES, locale);
-        return String.format("%s\n\n%s", bundle.getString(prCreated), this.makeLink());
+        return String.format("%s\n\n%s", bundle.getString(PR_CREATED), this.makeLink());
     }
 
     public String makeLink() {

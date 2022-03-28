@@ -1,10 +1,49 @@
 # backlog-github-integration-action
 
-This action helps integrate with [Nulab's backlog](https://nulab.com/products/backlog/) via GitHub events.
+This action helps integrate with [Nulab's Backlog](https://nulab.com/products/backlog/) via GitHub events.
 
 Here are the features.
 
 * updates a Pull Request link into related issues when it has opened.
+
+## Usage
+
+1. Set Secrets for Backlog
+
+You can use [secrets.GITHUB_TOKEN](https://docs.github.com/en/actions/security-guides/automatic-token-authentication) without configuring. See the below example for detail.
+
+2. Create workflow for pull request in your repository.
+
+Here is an example.
+
+```yml
+name: Pull request
+
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  pr-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: integrate the pull request with backlog
+        if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
+        uses: kazamori/backlog-github-integration-action@main
+        with:
+          subcommand: "pull_request"
+          args: "--repository ${{ github.repository }} --pr-number ${{ github.event.number }}"
+        env:
+          APP_LOCALE: "ja_JP"
+          APP_LOG_LEVEL: "debug"
+          BACKLOG_FQDN: ${{ secrets.BACKLOG_FQDN }}
+          BACKLOG_API_KEY: ${{ secrets.BACKLOG_API_KEY }}
+          BACKLOG_PROJECT_KEY: ${{ secrets.BACKLOG_PROJECT_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+Currently, this action is intended to be used for an opened event when a pull request was created.
 
 ## Develop
 

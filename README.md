@@ -45,6 +45,14 @@ jobs:
 
 Currently, this action is intended to be used for an opened event when a pull request was created.
 
+By default, the pull request link is added to the `Description` field. But if your Backlog has a custom field named `Pull Requests` (types: `Sentence`), set it like this.
+
+```yml
+        with:
+          subcommand: "pull_request"
+          args: "--repository ${{ github.repository }} --pr-number ${{ github.event.number }} --custom-field \"Pull Requests\""
+```
+
 ## Develop
 
 ### Precondition to run

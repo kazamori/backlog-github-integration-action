@@ -1,7 +1,7 @@
 package jp.kazamori.github.actions.backlog;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ObjectArrays;
+import com.google.common.base.Splitter;
 import com.typesafe.config.ConfigFactory;
 import jp.kazamori.github.actions.backlog.client.BacklogClientUtil;
 import jp.kazamori.github.actions.backlog.client.GitHubClient;
@@ -12,10 +12,16 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.HelpCommand;
 
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 @Command(name = "Backlog GitHub integration action",
         subcommands = {HelpCommand.class},
         description = "provides functionalities to integrate with Backlog")
 public class Main {
+
+    // see also: https://www.baeldung.com/java-split-string-commas#2-guavas-splitter-class
+    private static final Pattern doubleQuotePattern = Pattern.compile("\\s+(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
 
     @VisibleForTesting
     static String[] ensureArgumentsIsNotQuoted(String[] args) {
@@ -25,7 +31,14 @@ public class Main {
         if (args.length != 2) {
             return args;
         }
-        return ObjectArrays.concat(new String[]{args[0]}, args[1].split(" "), String.class);
+        val tokens = Splitter
+                .on(doubleQuotePattern)
+                .splitToList(args[1])
+                .stream()
+                .map(i -> i.replaceAll("\"", ""))
+                .collect(Collectors.toList());
+        tokens.add(0, args[0]);
+        return tokens.toArray(new String[]{});
     }
 
     public static void main(String[] args) {

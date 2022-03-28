@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,7 +16,11 @@ class MainTest {
         return Stream.of(
                 arguments(new String[]{"subcommand", "a", "b", "c"}, 4, "b"),
                 arguments(new String[]{"subcommand", "a b c"}, 4, "b"),
-                arguments(new String[]{"subcommand", "a", "b b", "d"}, 4, "b b")
+                arguments(new String[]{"subcommand", "a", "b b", "d"}, 4, "b b"),
+                arguments(new String[]{"subcommand", "a     bb\t\tc"}, 4, "bb"),
+                arguments(new String[]{"subcommand", "a \"b b\" c"}, 4, "b b"),
+                arguments(new String[]{"subcommand", "\"a a\", \"b b\" c"}, 4, "b b"),
+                arguments(new String[]{"subcommand", "\"a a\", \"b b b\" \"c c\""}, 4, "b b b")
         );
     }
 

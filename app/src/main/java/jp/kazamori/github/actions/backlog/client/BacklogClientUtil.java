@@ -132,7 +132,7 @@ public class BacklogClientUtil {
                     logger.info("Current value has already same text: {}", addValue);
                     return;
                 }
-                val value = currentValue + "\n" + addValue;
+                val value = currentValue.isEmpty() ? addValue : currentValue + "\n" + addValue;
                 val customFiledValue = new CustomFiledValue(field.getId(), value);
                 val params = new UpdateIssueParams(issue.getId())
                         .customFieldOtherValue(customFiledValue);

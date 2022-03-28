@@ -23,6 +23,12 @@ public class PullRequestInfo {
     }
 
     public String makeLink() {
-        return String.format("* [%s](%s)", this.title, this.url.toString());
+        val title = this.title
+                .replaceAll("\\[", "\\\\[")
+                .replaceAll("\\]", "\\\\]");
+        val url = this.url.toString()
+                .replaceAll("\\(", "\\\\(")
+                .replaceAll("\\)", "\\\\)");
+        return String.format("* [%s](%s)", title, url);
     }
 }

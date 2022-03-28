@@ -29,6 +29,7 @@ public class BacklogClientUtilTest {
         return Stream.of(
                 arguments("* コメント", "* コメント", true),
                 arguments("* メッセージ\nなにか\n* コメント", "* コメント", true),
+                arguments(null, "* コメント", false),
                 arguments("コメント", "* コメント", false),
                 arguments("* メッセージ\nなにか\nコメント", "* コメント", false)
         );

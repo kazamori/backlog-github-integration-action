@@ -78,6 +78,9 @@ public class BacklogClientUtil {
 
     @VisibleForTesting
     boolean hasSameValue(String currentValue, String addValue) {
+        if (currentValue == null) {
+            return false;
+        }
         return this.hasSameValue(currentValue.split("\\n"), addValue);
     }
 

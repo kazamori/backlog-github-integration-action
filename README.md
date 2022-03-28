@@ -35,7 +35,7 @@ jobs:
           subcommand: "pull_request"
           args: "--repository ${{ github.repository }} --pr-number ${{ github.event.number }}"
         env:
-          APP_LOCALE: "ja_JP"
+          APP_LOCALE: "en_US"
           APP_LOG_LEVEL: "debug"
           BACKLOG_FQDN: ${{ secrets.BACKLOG_FQDN }}
           BACKLOG_API_KEY: ${{ secrets.BACKLOG_API_KEY }}

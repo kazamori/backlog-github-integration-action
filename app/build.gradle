@@ -45,6 +45,7 @@ testing {
 
 testlogger {
     showStandardStreams true
+    showStackTraces true
     showPassed true
     showSkipped true
     showFailed true

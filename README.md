@@ -43,7 +43,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Currently, this action is intended to be used for an opened event when a pull request was created.
+Currently, this action is intended to be used for an opened event when a pull request was created. Issue IDs are taken from commit messages in the pull request.
 
 By default, the pull request link is added to the `Description` field. But if your Backlog has a custom field named `Pull Requests` (types: `Sentence`), set it like this.
 

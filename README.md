@@ -53,6 +53,16 @@ By default, the pull request link is added to the `Description` field. But if yo
           args: "--repository ${{ github.repository }} --pr-number ${{ github.event.number }} --custom-field \"Pull Requests\""
 ```
 
+### Actual example
+
+You can see an actual example of the test repository to run workflows on GitHub actions.
+
+* https://github.com/kazamori/test-gh-actions-repo/actions
+
+After these workflows run, a user of `BACKLOG_API_KEY` will write the `Description` field and the issue comments.
+
+![](https://github.com/kazamori/backlog-github-integration-action/raw/main/example/pulls/figures/backlog-issue-comments1.png)
+
 ## Develop
 
 ### Precondition to run

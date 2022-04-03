@@ -10,7 +10,15 @@ Here are the features.
 
 1. Set Secrets for Backlog
 
-You can use [secrets.GITHUB_TOKEN](https://docs.github.com/en/actions/security-guides/automatic-token-authentication) without configuring. See the below example for detail.
+For Backlog:
+
+* secrets.BACKLOG_FQDN
+* secrets.BACKLOG_API_KEY
+* secrets.BACKLOG_PROJECT_KEY
+
+For GitHub, you can use [secrets.GITHUB_TOKEN](https://docs.github.com/en/actions/security-guides/automatic-token-authentication) without configuring.
+
+See the below example for detail.
 
 2. Create workflow for pull request in your repository.
 

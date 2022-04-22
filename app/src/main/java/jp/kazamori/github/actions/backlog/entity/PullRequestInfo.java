@@ -1,5 +1,6 @@
 package jp.kazamori.github.actions.backlog.entity;
 
+import jp.kazamori.github.actions.backlog.common.MarkdownUtil;
 import jp.kazamori.github.actions.backlog.config.AppConst;
 import lombok.Value;
 import lombok.val;
@@ -23,12 +24,6 @@ public class PullRequestInfo {
     }
 
     public String makeLink() {
-        val title = this.title
-                .replaceAll("\\[", "\\\\[")
-                .replaceAll("\\]", "\\\\]");
-        val url = this.url.toString()
-                .replaceAll("\\(", "\\\\(")
-                .replaceAll("\\)", "\\\\)");
-        return String.format("* [%s](%s)", title, url);
+        return String.format("* %s", MarkdownUtil.makeLink(title, url));
     }
 }

@@ -1,11 +1,13 @@
 package jp.kazamori.github.actions.backlog.command;
 
 import com.nulabinc.backlog4j.BacklogClient;
+import com.nulabinc.backlog4j.Issue;
 import com.nulabinc.backlog4j.api.option.AddIssueCommentParams;
 import jp.kazamori.github.actions.backlog.client.BacklogClientUtil;
 import jp.kazamori.github.actions.backlog.client.GitHubClient;
 import jp.kazamori.github.actions.backlog.config.ConfigUtil;
-import lombok.SneakyThrows;
+import jp.kazamori.github.actions.backlog.entity.PullRequestInfo;
+import jp.kazamori.github.actions.backlog.exception.UpdateIssueException;
 import lombok.val;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +15,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+import java.util.Locale;
 import java.util.Optional;
 
 @Command(name = "pull_request", description = "pull_request event that trigger workflows")
@@ -41,32 +44,44 @@ public class PullRequest implements Runnable {
             description = "set custom field name")
     private Optional<String> customField;
 
+    private void updateIssue(BacklogClientUtil util, Issue issue, String link) {
+        // update pr link to an intended field
+        if (this.customField.isPresent()) {
+            val customFieldName = this.customField.get();
+            logger.info(" * custom field name: {}", customFieldName);
+            util.updateCustomFieldOfIssue(issue, customFieldName, link);
+        } else {
+            util.updateDescriptionOfIssue(issue, link);
+        }
+    }
+
+    private boolean updateIssues(Locale locale, BacklogClientUtil util, PullRequestInfo info) {
+        var hasError = false;
+        for (var id : info.getIssueIds()) {
+            val issue = this.backlogClient.getIssue(id);
+            val issueCommentParams = new AddIssueCommentParams(issue.getId(), info.makeComment(locale));
+            try {
+                val comment = this.backlogClient.addIssueComment(issueCommentParams);
+                logger.info(" * comment id: {}", comment.getId());
+                this.updateIssue(util, issue, info.makeLink());
+                logger.info("Completed to update issue: {}", issue.getId());
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                hasError = true;
+            }
+        }
+        return hasError;
+    }
+
     @Override
-    @SneakyThrows
     public void run() {
         val config = this.githubClient.getConfig();
         val locale = ConfigUtil.getLocale(config);
         val util = new BacklogClientUtil(config, this.backlogClient);
         val info = this.githubClient.getPullRequestInfo(this.repository, this.prNumber);
-        for (var id : info.getIssueIds()) {
-            val issue = this.backlogClient.getIssue(id);
-
-            // add comment
-            val issueCommentParams = new AddIssueCommentParams(issue.getId(), info.makeComment(locale));
-            val comment = this.backlogClient.addIssueComment(issueCommentParams);
-            logger.info(" * comment id: {}", comment.getId());
-
-            // update pr link to an intended field
-            val link = info.makeLink();
-            if (this.customField.isPresent()) {
-                val customFieldName = this.customField.get();
-                logger.info(" * custom field name: {}", customFieldName);
-                util.updateCustomFieldOfIssue(issue, customFieldName, link);
-            } else {
-                util.updateDescriptionOfIssue(issue, link);
-            }
-
-            logger.info("Completed to update issue: {}", issue.getId());
+        val hasError = this.updateIssues(locale, util, info);
+        if (hasError) {
+            throw new UpdateIssueException("An error occurred when the client tried to update an issue.");
         }
     }
 }

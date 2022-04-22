@@ -82,7 +82,7 @@ export APP_LOCALE="en_US"
 export APP_LOG_LEVEL="debug"
 export BACKLOG_FQDN="YOUR-SPACE.backlog.com"
 export BACKLOG_API_KEY="..."
-export BACKLOG_PROJECT_KEY="TEST"
+export BACKLOG_PROJECT_KEY="YOURPROJECT"
 export GITHUB_TOKEN="..."
 ```
 

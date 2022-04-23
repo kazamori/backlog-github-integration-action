@@ -5,10 +5,11 @@ This action helps integrate with [Nulab's Backlog](https://nulab.com/products/ba
 Here are the features.
 
 * updates a Pull Request link into related issues when it has opened.
+* updates commit links into related issues when it has pushed.
 
 ## Usage
 
-1. Set Secrets for Backlog
+### Set Secrets for Backlog
 
 For Backlog:
 
@@ -20,20 +21,23 @@ For GitHub, you can use [secrets.GITHUB_TOKEN](https://docs.github.com/en/action
 
 See the below example for detail.
 
-2. Create workflow for pull request in your repository.
+### Create a workflow in your repository.
 
 Here is an example.
 
 ```yml
-name: Pull request
+name: Backlog integration
 
 on:
   pull_request:
     types:
       - opened
+  push:
+    branches:
+      - main
 
 jobs:
-  pr-integration:
+  backlog-integration:
     runs-on: ubuntu-latest
     steps:
       - name: integrate the pull request with backlog
@@ -49,9 +53,23 @@ jobs:
           BACKLOG_API_KEY: ${{ secrets.BACKLOG_API_KEY }}
           BACKLOG_PROJECT_KEY: ${{ secrets.BACKLOG_PROJECT_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: integrate commits with backlog
+        if: ${{ github.event_name == 'push' }}
+        uses: kazamori/backlog-github-integration-action@main
+        with:
+          subcommand: "push"
+          args: "--repository ${{ github.repository }} --pusher ${{ github.event.pusher.name }} --commits '${{ toJson(github.event.commits) }}'"
+        env:
+          APP_LOCALE: "en_US"
+          APP_LOG_LEVEL: "debug"
+          BACKLOG_FQDN: ${{ secrets.BACKLOG_FQDN }}
+          BACKLOG_API_KEY: ${{ secrets.BACKLOG_API_KEY }}
+          BACKLOG_PROJECT_KEY: ${{ secrets.BACKLOG_PROJECT_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Currently, this action is intended to be used for an opened event when a pull request was created. Issue IDs are taken from commit messages in the pull request.
+By checking `${{ github.event_name }}`, some subcommands can be included in a single workflow yml. Issue IDs are taken from commit messages.
 
 By default, the pull request link is added to the `Description` field. But if your Backlog has a custom field named `Pull Requests` (types: `Sentence`), set it like this.
 
@@ -88,8 +106,16 @@ export GITHUB_TOKEN="..."
 
 ### How to run
 
+#### Pull request
+
 ```bash
 $ ./gradlew run --args="pull_request --repository kazamori/backlog-github-integration-action --pr-number 1"
+```
+
+#### Push
+
+```bash
+$ ./gradlew run --args="push --repository kazamori/backlog-github-integration-action --pusher t2y --commits '[{"key": "value", ...}]'"
 ```
 
 ### for debugging

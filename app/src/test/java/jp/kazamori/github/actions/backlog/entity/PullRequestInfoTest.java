@@ -1,6 +1,5 @@
 package jp.kazamori.github.actions.backlog.entity;
 
-import lombok.Value;
 import lombok.val;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -15,7 +14,6 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-@Value
 public class PullRequestInfoTest {
 
     static Stream<Arguments> makeCommentData() {

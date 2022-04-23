@@ -1,9 +1,11 @@
 package jp.kazamori.github.actions.backlog.client;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
 import jp.kazamori.github.actions.backlog.config.BacklogConfigKey;
 import jp.kazamori.github.actions.backlog.config.GitHubConfigKey;
 import jp.kazamori.github.actions.backlog.entity.PullRequestInfo;
+import jp.kazamori.github.actions.backlog.entity.github.PushEventCommit;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -13,11 +15,9 @@ import org.kohsuke.github.GitHubBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Getter
 public class GitHubClient {
@@ -39,17 +39,32 @@ public class GitHubClient {
         return commitMessages;
     }
 
-    private static final String ISSUE_IDS_TEMPLATE = "(%s-\\d+)";
+    @VisibleForTesting
+    List<String> matchKey(Pattern pattern, String message, String key) {
+        val results = new ArrayList<String>();
+        val matcher = pattern.matcher(message);
+        while (matcher.find()) {
+            if (matcher.start() != 0) {
+                // FIXME: message="MYPROJ" and key="PROJ"
+                val prevCharacter = message.substring(matcher.start() - 1, matcher.start());
+                if (!prevCharacter.matches("\\s")) {
+                    continue; // skip
+                }
+            }
+            results.add(matcher.group());
+        }
+        return results;
+    }
+
+    @VisibleForTesting
+    static final String ISSUE_IDS_TEMPLATE = "(%s-\\d+)";
 
     public Set<String> searchIssueIds(List<String> messages, String key) {
         val issueIds = new HashSet<String>();
         val regex = String.format(ISSUE_IDS_TEMPLATE, key);
         val pattern = Pattern.compile(regex, Pattern.MULTILINE);
         for (var message : messages) {
-            val m = pattern.matcher(message);
-            while (m.find()) {
-                issueIds.add(m.group());
-            }
+            issueIds.addAll(this.matchKey(pattern, message, key));
         }
         return issueIds;
     }
@@ -64,6 +79,25 @@ public class GitHubClient {
         val info = new PullRequestInfo(pr.getTitle(), pr.getHtmlUrl(), issueIds);
         logger.info(" * info: {}", info);
         return info;
+    }
+
+    public Map<String, List<PushEventCommit>> getCommitsRelatedIssue(List<PushEventCommit> commits) {
+        val result = new HashMap<String, List<PushEventCommit>>();
+        val key = this.config.getString(BacklogConfigKey.PROJECT_KEY.get());
+        val messages = commits.stream().map(PushEventCommit::getMessage).collect(Collectors.toList());
+        val issueIds = this.searchIssueIds(messages, key);
+        for (val id : issueIds) {
+            result.put(id, new ArrayList<>());
+            val regex = String.format(ISSUE_IDS_TEMPLATE, key);
+            val pattern = Pattern.compile(regex, Pattern.MULTILINE);
+            for (val commit : commits) {
+                val matchedIds = this.matchKey(pattern, commit.getMessage(), key);
+                if (matchedIds.contains(id)) {
+                    result.get(id).add(commit);
+                }
+            }
+        }
+        return result;
     }
 
     @SneakyThrows

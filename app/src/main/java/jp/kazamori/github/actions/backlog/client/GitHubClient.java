@@ -1,9 +1,11 @@
 package jp.kazamori.github.actions.backlog.client;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.nulabinc.backlog4j.Issue;
 import com.typesafe.config.Config;
 import jp.kazamori.github.actions.backlog.config.BacklogConfigKey;
 import jp.kazamori.github.actions.backlog.config.GitHubConfigKey;
+import jp.kazamori.github.actions.backlog.entity.CommitInfo;
 import jp.kazamori.github.actions.backlog.entity.PullRequestInfo;
 import jp.kazamori.github.actions.backlog.entity.github.PushEventCommit;
 import lombok.Getter;
@@ -40,14 +42,22 @@ public class GitHubClient {
     }
 
     @VisibleForTesting
-    List<String> matchKey(Pattern pattern, String message, String key) {
+    List<String> matchKey(Pattern pattern, String message) {
         val results = new ArrayList<String>();
         val matcher = pattern.matcher(message);
         while (matcher.find()) {
             if (matcher.start() != 0) {
                 // FIXME: message="MYPROJ" and key="PROJ"
                 val prevCharacter = message.substring(matcher.start() - 1, matcher.start());
-                if (!prevCharacter.matches("\\s")) {
+                if (!(prevCharacter.equals("#")  // hash sign (e.g. #PROJ-1) is also valid since it's common
+                        || prevCharacter.matches("\\s"))) {
+                    continue; // skip
+                }
+            }
+            if (matcher.end() != message.length()) {
+                // FIXME: message="PROJ-1SUFFIX" and key="PROJ"
+                val nextCharacter = message.substring(matcher.end(), matcher.end() + 1);
+                if (!nextCharacter.matches("\\s")) {
                     continue; // skip
                 }
             }
@@ -64,7 +74,7 @@ public class GitHubClient {
         val regex = String.format(ISSUE_IDS_TEMPLATE, key);
         val pattern = Pattern.compile(regex, Pattern.MULTILINE);
         for (var message : messages) {
-            issueIds.addAll(this.matchKey(pattern, message, key));
+            issueIds.addAll(this.matchKey(pattern, message));
         }
         return issueIds;
     }
@@ -81,23 +91,56 @@ public class GitHubClient {
         return info;
     }
 
-    public Map<String, List<PushEventCommit>> getCommitsRelatedIssue(List<PushEventCommit> commits) {
-        val result = new HashMap<String, List<PushEventCommit>>();
+    @VisibleForTesting
+    static final String STATUS_ISSUE_IDS_TEMPLATE = "\\s?(\\w+)\\s%s";
+
+    @VisibleForTesting
+    Optional<Issue.StatusType> getStatusToBeUpdated(String issueId, String message) {
+        val pattern = Pattern.compile(String.format(STATUS_ISSUE_IDS_TEMPLATE, issueId));
+        val matcher = pattern.matcher(message);
+        if (matcher.find()) {
+            val keyword = matcher.group(1);
+            switch (keyword) {
+                case "fix":
+                case "fixes":
+                case "fixed":
+                    return Optional.of(Issue.StatusType.Resolved);
+                case "close":
+                case "closes":
+                case "closed":
+                    return Optional.of(Issue.StatusType.Closed);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private CommitInfo createCommitInfo(List<PushEventCommit> commits, String key, String issueId) {
+        val regex = String.format(ISSUE_IDS_TEMPLATE, key);
+        val pattern = Pattern.compile(regex, Pattern.MULTILINE);
+        var status = Optional.<Issue.StatusType>empty();
+        val matchedCommits = new ArrayList<PushEventCommit>();
+        for (val commit : commits) {
+            val matchedIds = this.matchKey(pattern, commit.getMessage());
+            if (matchedIds.contains(issueId)) {
+                matchedCommits.add(commit);
+                val tmpStatus = this.getStatusToBeUpdated(issueId, commit.getMessage());
+                if (tmpStatus.isPresent()) {
+                    status = tmpStatus;
+                }
+            }
+        }
+        return new CommitInfo(issueId, matchedCommits, status);
+    }
+
+    public List<CommitInfo> getCommitsRelatedIssue(List<PushEventCommit> commits) {
+        val results = new ArrayList<CommitInfo>();
         val key = this.config.getString(BacklogConfigKey.PROJECT_KEY.get());
         val messages = commits.stream().map(PushEventCommit::getMessage).collect(Collectors.toList());
         val issueIds = this.searchIssueIds(messages, key);
         for (val id : issueIds) {
-            result.put(id, new ArrayList<>());
-            val regex = String.format(ISSUE_IDS_TEMPLATE, key);
-            val pattern = Pattern.compile(regex, Pattern.MULTILINE);
-            for (val commit : commits) {
-                val matchedIds = this.matchKey(pattern, commit.getMessage(), key);
-                if (matchedIds.contains(id)) {
-                    result.get(id).add(commit);
-                }
-            }
+            results.add(this.createCommitInfo(commits, key, id));
         }
-        return result;
+        return results;
     }
 
     @SneakyThrows

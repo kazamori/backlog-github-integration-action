@@ -65,21 +65,20 @@ public class Push implements Runnable {
         var noErrors = true;
         val bundle = ResourceBundle.getBundle(AppConst.BUNDLE_MESSAGES, locale);
         val pusherCreated = String.format(bundle.getString(PUSH_CREATED), this.pusher);
-        val commitInfos = this.githubClient.getCommitsRelatedIssue(allCommits);
-        for (val info : commitInfos) {
-            val links = info.getCommits().stream()
+        for (val commitInfo : this.githubClient.getCommitsGroupByIssue(allCommits)) {
+            val links = commitInfo.getCommits().stream()
                     .map(PushEventCommit::makeLink)
                     .collect(Collectors.toList());
             links.addAll(0, List.of(pusherCreated, ""));
             try {
-                this.addIssueComment(info.getIssueId(), links);
+                this.addIssueComment(commitInfo.getIssueId(), links);
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 noErrors = false;
             }
-            if (info.getStatus().isPresent()) {
-                val params = new UpdateIssueParams(info.getIssueId())
-                        .status(info.getStatus().get());
+            val optStatus = commitInfo.getStatus();
+            if (optStatus.isPresent()) {
+                val params = new UpdateIssueParams(commitInfo.getIssueId()).status(optStatus.get());
                 try {
                     val updated = this.backlogClient.updateIssue(params);
                     logger.info("Completed to update issue: {}", updated.getId());

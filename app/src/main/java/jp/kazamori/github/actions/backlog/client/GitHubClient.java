@@ -91,8 +91,7 @@ public class GitHubClient {
         return info;
     }
 
-    @VisibleForTesting
-    static final String STATUS_ISSUE_IDS_TEMPLATE = "\\s?(\\w+)\\s%s";
+    private static final String STATUS_ISSUE_IDS_TEMPLATE = "\\s?(\\w+)\\s%s";
 
     @VisibleForTesting
     Optional<Issue.StatusType> getStatusToBeUpdated(String issueId, String message) {
@@ -132,7 +131,7 @@ public class GitHubClient {
         return new CommitInfo(issueId, matchedCommits, status);
     }
 
-    public List<CommitInfo> getCommitsRelatedIssue(List<PushEventCommit> commits) {
+    public List<CommitInfo> getCommitsGroupByIssue(List<PushEventCommit> commits) {
         val results = new ArrayList<CommitInfo>();
         val key = this.config.getString(BacklogConfigKey.PROJECT_KEY.get());
         val messages = commits.stream().map(PushEventCommit::getMessage).collect(Collectors.toList());

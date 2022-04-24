@@ -115,7 +115,7 @@ public class GitHubClientTest {
     @ParameterizedTest
     @MethodSource("makeCommitsData")
     void getCommitsRelatedIssue(List<PushEventCommit> allCommits, List<CommitInfo> expected) {
-        val actual = client.getCommitsRelatedIssue(allCommits);
+        val actual = client.getCommitsGroupByIssue(allCommits);
         for (val expectedInfo : expected) {
             val info = actual.stream()
                     .filter(e -> e.getIssueId().equals(expectedInfo.getIssueId()))

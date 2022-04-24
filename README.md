@@ -39,6 +39,13 @@ on:
 jobs:
   backlog-integration:
     runs-on: ubuntu-latest
+    env:
+      APP_LOCALE: "en_US"
+      APP_LOG_LEVEL: "debug"
+      BACKLOG_FQDN: ${{ secrets.BACKLOG_FQDN }}
+      BACKLOG_API_KEY: ${{ secrets.BACKLOG_API_KEY }}
+      BACKLOG_PROJECT_KEY: ${{ secrets.BACKLOG_PROJECT_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: integrate the pull request with backlog
         if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
@@ -46,13 +53,6 @@ jobs:
         with:
           subcommand: "pull_request"
           args: "--repository ${{ github.repository }} --pr-number ${{ github.event.number }}"
-        env:
-          APP_LOCALE: "en_US"
-          APP_LOG_LEVEL: "debug"
-          BACKLOG_FQDN: ${{ secrets.BACKLOG_FQDN }}
-          BACKLOG_API_KEY: ${{ secrets.BACKLOG_API_KEY }}
-          BACKLOG_PROJECT_KEY: ${{ secrets.BACKLOG_PROJECT_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: integrate commits with backlog
         if: ${{ github.event_name == 'push' }}
@@ -60,13 +60,6 @@ jobs:
         with:
           subcommand: "push"
           args: "--repository ${{ github.repository }} --pusher ${{ github.event.pusher.name }} --commits '${{ toJson(github.event.commits) }}'"
-        env:
-          APP_LOCALE: "en_US"
-          APP_LOG_LEVEL: "debug"
-          BACKLOG_FQDN: ${{ secrets.BACKLOG_FQDN }}
-          BACKLOG_API_KEY: ${{ secrets.BACKLOG_API_KEY }}
-          BACKLOG_PROJECT_KEY: ${{ secrets.BACKLOG_PROJECT_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 By checking `${{ github.event_name }}`, some subcommands can be included in a single workflow yml. Issue IDs are taken from commit messages.

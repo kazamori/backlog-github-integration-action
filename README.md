@@ -85,9 +85,17 @@ You can see an actual example of the test repository to run workflows on GitHub 
 
 * https://github.com/kazamori/test-gh-actions-repo/actions
 
+#### Pull request
+
 After these workflows run, a user of `BACKLOG_API_KEY` will write the `Description` field and the issue comments.
 
 ![](https://github.com/kazamori/backlog-github-integration-action/raw/main/example/pulls/figures/backlog-issue-comments1.png)
+
+#### Push
+
+After these workflows run, a user of `BACKLOG_API_KEY` will comment and change the issue status by commit messages.
+
+![](https://github.com/kazamori/backlog-github-integration-action/raw/main/example/push/figures/backlog-issue-comments2.png)
 
 ## Develop
 

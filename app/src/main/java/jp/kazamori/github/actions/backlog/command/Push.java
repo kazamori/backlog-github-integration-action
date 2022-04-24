@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nulabinc.backlog4j.BacklogClient;
 import com.nulabinc.backlog4j.api.option.AddIssueCommentParams;
+import com.nulabinc.backlog4j.api.option.UpdateIssueParams;
 import jp.kazamori.github.actions.backlog.client.BacklogClientUtil;
 import jp.kazamori.github.actions.backlog.client.GitHubClient;
 import jp.kazamori.github.actions.backlog.config.AppConst;
@@ -64,16 +65,28 @@ public class Push implements Runnable {
         var noErrors = true;
         val bundle = ResourceBundle.getBundle(AppConst.BUNDLE_MESSAGES, locale);
         val pusherCreated = String.format(bundle.getString(PUSH_CREATED), this.pusher);
-        val issueIdCommits = this.githubClient.getCommitsRelatedIssue(allCommits);
-        for (val entry : issueIdCommits.entrySet()) {
-            val commits = entry.getValue();
-            val links = commits.stream().map(PushEventCommit::makeLink).collect(Collectors.toList());
+        val commitInfos = this.githubClient.getCommitsRelatedIssue(allCommits);
+        for (val info : commitInfos) {
+            val links = info.getCommits().stream()
+                    .map(PushEventCommit::makeLink)
+                    .collect(Collectors.toList());
             links.addAll(0, List.of(pusherCreated, ""));
             try {
-                this.addIssueComment(entry.getKey(), links);
+                this.addIssueComment(info.getIssueId(), links);
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 noErrors = false;
+            }
+            if (info.getStatus().isPresent()) {
+                val params = new UpdateIssueParams(info.getIssueId())
+                        .status(info.getStatus().get());
+                try {
+                    val updated = this.backlogClient.updateIssue(params);
+                    logger.info("Completed to update issue: {}", updated.getId());
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                    noErrors = false;
+                }
             }
         }
         return noErrors;

@@ -1,8 +1,10 @@
 package jp.kazamori.github.actions.backlog.client;
 
+import com.nulabinc.backlog4j.Issue;
 import com.typesafe.config.ConfigFactory;
 import jp.kazamori.github.actions.backlog.config.AppConst;
 import jp.kazamori.github.actions.backlog.config.BacklogConfigKey;
+import jp.kazamori.github.actions.backlog.entity.CommitInfo;
 import jp.kazamori.github.actions.backlog.entity.github.PushEventCommit;
 import jp.kazamori.github.actions.backlog.entity.github.PushEventCommitTest;
 import lombok.val;
@@ -11,14 +13,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.kohsuke.github.GitHubBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,7 +42,7 @@ public class GitHubClientTest {
         return Stream.of(
                 arguments("", List.of()),
                 arguments("no project kye", List.of()),
-                arguments("add TEST-4 and #TEST-8 and TEST-12", List.of("TEST-4", "TEST-12")),
+                arguments("add TEST-4 and #TEST-8 and TEST-12", List.of("TEST-4", "TEST-8", "TEST-12")),
                 arguments("add some feature\n - fix TEST-5435\n - refs TEST-15832", List.of("TEST-5435", "TEST-15832")),
                 arguments("ATEST-1 and ATESTB-2 and TESTB-3", List.of()),
                 arguments("_TEST-1 and $TEST-2 and %TEST-3", List.of()),
@@ -56,7 +57,7 @@ public class GitHubClientTest {
     @ParameterizedTest
     @MethodSource("makeMessageData")
     void matchKey(String message, List<String> expected) {
-        val actual = client.matchKey(PATTERN, message, "TEST");
+        val actual = client.matchKey(PATTERN, message);
         assertEquals(expected, actual);
     }
 
@@ -74,24 +75,36 @@ public class GitHubClientTest {
     }
 
     static Stream<Arguments> makeCommitsData() {
+        val issueId1 = String.format("%s-1", projectKey);
         val allCommits1 = List.of(
-                PushEventCommitTest.create(String.format("%s-1 message0", projectKey)),
-                PushEventCommitTest.create(String.format("%s-1 message1", projectKey)));
-        val expected1 = Map.of(
-                String.format("%s-1", projectKey), allCommits1);
+                PushEventCommitTest.create(String.format("%s message0", issueId1)),
+                PushEventCommitTest.create(String.format("%s message1", issueId1)));
+        val expected1 = List.of(
+                new CommitInfo(issueId1, allCommits1, Optional.empty()));
 
+        val issueId2 = String.format("%s-2", projectKey);
+        val issueId3 = String.format("%s-3", projectKey);
         val allCommits2 = List.of(
-                PushEventCommitTest.create(String.format("%s-1 message0", projectKey)),
-                PushEventCommitTest.create(String.format("%s-2 message1", projectKey)),
-                PushEventCommitTest.create(String.format("%s-1 message2", projectKey)),
-                PushEventCommitTest.create(String.format("%s-3 message3", projectKey)),
-                PushEventCommitTest.create(String.format("%s-3 message4", projectKey + "ANOTHER")),
-                PushEventCommitTest.create(String.format("%s-3 message5", "ANOTHER" + projectKey)),
-                PushEventCommitTest.create(String.format("%s-2 message6", projectKey)));
-        val expected2 = Map.of(
-                String.format("%s-1", projectKey), List.of(allCommits2.get(0), allCommits2.get(2)),
-                String.format("%s-2", projectKey), List.of(allCommits2.get(1), allCommits2.get(6)),
-                String.format("%s-3", projectKey), List.of(allCommits2.get(3)));
+                PushEventCommitTest.create(String.format("fix %s message0", issueId1)),
+                PushEventCommitTest.create(String.format("%s message1", issueId2)),
+                PushEventCommitTest.create(String.format("%s message2", issueId1)),
+                PushEventCommitTest.create(String.format("close %s message3", issueId3)),
+                PushEventCommitTest.create(String.format("%s message4", issueId3 + "ANOTHER")),
+                PushEventCommitTest.create(String.format("%s message5", "ANOTHER" + issueId3)),
+                PushEventCommitTest.create(String.format("%s message6", issueId2)));
+        val expected2 = List.of(
+                new CommitInfo(
+                        issueId1,
+                        List.of(allCommits2.get(0), allCommits2.get(2)),
+                        Optional.of(Issue.StatusType.Resolved)),
+                new CommitInfo(
+                        issueId2,
+                        List.of(allCommits2.get(1), allCommits2.get(6)),
+                        Optional.empty()),
+                new CommitInfo(
+                        issueId3,
+                        List.of(allCommits2.get(3)),
+                        Optional.of(Issue.StatusType.Closed)));
 
         return Stream.of(
                 arguments(allCommits1, expected1),
@@ -101,19 +114,49 @@ public class GitHubClientTest {
 
     @ParameterizedTest
     @MethodSource("makeCommitsData")
-    void getCommitsRelatedIssue(List<PushEventCommit> allCommits, Map<String, List<PushEventCommit>> expected) {
+    void getCommitsRelatedIssue(List<PushEventCommit> allCommits, List<CommitInfo> expected) {
         val actual = client.getCommitsRelatedIssue(allCommits);
-        assertEquals(expected.size(), actual.size());
-        for (val entry : expected.entrySet()) {
-            val commits = actual.get(entry.getKey());
-            assertNotNull(commits);
-            assertFalse(commits.isEmpty());
-            assertEquals(entry.getValue().size(), commits.size());
+        for (val expectedInfo : expected) {
+            val info = actual.stream()
+                    .filter(e -> e.getIssueId().equals(expectedInfo.getIssueId()))
+                    .collect(Collectors.toList())
+                    .get(0);
+            assertEquals(expectedInfo.getIssueId(), info.getIssueId());
+            assertNotNull(info.getCommits());
+            assertFalse(info.getCommits().isEmpty());
+            assertEquals(expectedInfo.getCommits().size(), info.getCommits().size());
+            assertEquals(expectedInfo.getStatus(), info.getStatus());
             var i = 0;
-            for (val expectedCommit : entry.getValue()) {
-                assertEquals(expectedCommit.getMessage(), commits.get(i).getMessage());
+            for (val expectedCommit : expectedInfo.getCommits()) {
+                assertEquals(expectedCommit.getMessage(), info.getCommits().get(i).getMessage());
                 i++;
             }
+        }
+    }
+
+    static Stream<Arguments> makeCommitWithStatusData() {
+        return Stream.of(
+                arguments("TEST-1", "fixed an issue", Optional.empty()),
+                arguments("TEST-1", "fix TEST-1 about an issue", Optional.of(Issue.StatusType.Resolved)),
+                arguments("TEST-1", "fixes TEST-1 about an issue", Optional.of(Issue.StatusType.Resolved)),
+                arguments("TEST-1", "I fixed TEST-1 about an issue", Optional.of(Issue.StatusType.Resolved)),
+                arguments("TEST-2", "I fixed TEST-1 about an issue", Optional.empty()),
+                arguments("TEST-2", "I fixed TEST-1 TEST-2 about an issue", Optional.empty()),
+                arguments("TEST-2", "fixed TEST-1 and closed TEST-2", Optional.of(Issue.StatusType.Closed)),
+                arguments("TEST-2", "fixes TEST-1 and closes TEST-2", Optional.of(Issue.StatusType.Closed)),
+                arguments("TEST-2", "fix TEST-1 and close TEST-2", Optional.of(Issue.StatusType.Closed)),
+                arguments("TEST-3", "fix TEST-1 and close TEST-2 and TEST-3", Optional.empty())
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("makeCommitWithStatusData")
+    void getStatusToBeUpdated(String issueId, String message, Optional<Issue.StatusType> expected) {
+        val actual = client.getStatusToBeUpdated(issueId, message);
+        if (expected.isEmpty()) {
+            assertTrue(actual.isEmpty());
+        } else {
+            assertEquals(expected.get(), actual.get());
         }
     }
 }

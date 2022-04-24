@@ -1,5 +1,6 @@
 package jp.kazamori.github.actions.backlog.cli;
 
+import com.nulabinc.backlog4j.Issue;
 import com.nulabinc.backlog4j.api.option.AddIssueCommentParams;
 import com.nulabinc.backlog4j.api.option.UpdateIssueParams;
 import com.typesafe.config.Config;
@@ -41,6 +42,11 @@ public class BacklogClientCli implements Runnable {
             description = "set custom field name")
     private Optional<String> customField;
 
+    @CommandLine.Option(names = "--fixed",
+            description = "change issue status to be fixed",
+            defaultValue = "false")
+    private boolean isFixed;
+
     @Override
     public void run() {
         val client = BacklogClientUtil.createClient(this.config);
@@ -65,6 +71,14 @@ public class BacklogClientCli implements Runnable {
         if (customField.isPresent()) {
             val customFieldName = this.customField.get();
             util.updateCustomFieldOfIssue(issue, customFieldName, this.issueComment.get());
+        }
+
+        if (isFixed) {
+            logger.info(" * fixed: {}", isFixed);
+            val params = new UpdateIssueParams(this.issueId)
+                    .status(Issue.StatusType.Resolved);
+            val updated = client.updateIssue(params);
+            logger.info("Updated issue status: {} -> {}", issue.getStatus().getName(), updated.getStatus().getName());
         }
     }
 

@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.val;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,9 +17,11 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class PushEventCommitTest {
     private final Logger logger = LoggerFactory.getLogger(PushEventCommitTest.class);
@@ -79,5 +84,23 @@ public class PushEventCommitTest {
                 MismatchedInputException.class,
                 () -> mapper.readValue("", typeReference)
         );
+    }
+
+    static Stream<Arguments> makeCommitsData() {
+        val expected = "* [TEST-1 message (xxxxxx)](https://github.com/owner/repo/commit/xxxyyy)";
+        return Stream.of(
+                arguments(create(""), "* [xxxxxx](https://github.com/owner/repo/commit/xxxyyy)"),
+                arguments(create("TEST-1 message"), expected),
+                arguments(create("TEST-1 message\n"), expected),
+                arguments(create("TEST-1 message\n  * something\n  * something"), expected),
+                arguments(create("TEST-1 message\n\nsomething\n\ncomment\n"), expected)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("makeCommitsData")
+    void makeLink(PushEventCommit commit, String expected) {
+        val actual = commit.makeLink();
+        assertEquals(expected, actual);
     }
 }

@@ -13,6 +13,7 @@ import lombok.extern.jackson.Jacksonized;
 import lombok.val;
 
 import java.time.OffsetDateTime;
+import java.util.Optional;
 
 @Value
 @Builder
@@ -62,7 +63,9 @@ public class PushEventCommit {
     @JsonIgnore
     public String makeLink() {
         val shortId = this.getId().substring(0, 6);
-        val title = String.format("%s (%s)", this.getMessage(), shortId);
+        val message = Optional.ofNullable(this.getMessage()).orElse("");
+        val firstLine = message.split("\\n")[0];
+        val title = firstLine.isEmpty() ? shortId : String.format("%s (%s)", firstLine, shortId);
         return String.format("* %s", MarkdownUtil.makeLink(title, this.getUrl()));
     }
 }

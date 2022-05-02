@@ -1,5 +1,9 @@
 name: 'Backlog-GitHub integration action'
 description: "integrates with Nulab's backlog via GitHub events"
+author: kazamori
+branding:
+  icon: activity
+  color: blue
 inputs:
   subcommand:
     required: true

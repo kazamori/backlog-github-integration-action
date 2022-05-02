@@ -107,7 +107,7 @@ jib {
   }
   to {
     image = 'ghcr.io/kazamori/backlog-github-integration-action'
-    tags = ['v1']
+    tags = ['latest']
   }
   container {
     jvmFlags = [

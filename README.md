@@ -49,14 +49,14 @@ jobs:
     steps:
       - name: integrate the pull request with backlog
         if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
-        uses: kazamori/backlog-github-integration-action@main
+        uses: kazamori/backlog-github-integration-action@v1
         with:
           subcommand: "pull_request"
           args: "--repository ${{ github.repository }} --pr-number ${{ github.event.number }}"
 
       - name: integrate commits with backlog
         if: ${{ github.event_name == 'push' }}
-        uses: kazamori/backlog-github-integration-action@main
+        uses: kazamori/backlog-github-integration-action@v1
         with:
           subcommand: "push"
           args: "--repository ${{ github.repository }} --pusher ${{ github.event.pusher.name }} --commits '${{ toJson(github.event.commits) }}'"

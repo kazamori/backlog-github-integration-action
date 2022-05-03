@@ -220,13 +220,11 @@ This action is run as below sequence diagram.
 ```mermaid
 sequenceDiagram
 
-participant user as User
 participant repo as Repository
 participant action as GitHub Actions
 participant bgia as Backlog-GitHub<br />integration action<br />repository
 participant ghcr as GitHub Container Registry
 
-user->>repo: work
 repo->>action: event
 action->>bgia: checkout [ ${REVISION} / ${TAG} / ${BRANCH} ]
 bgia->>action: action.yml

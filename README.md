@@ -7,6 +7,23 @@ Here are the features.
 * updates a Pull Request link into related issues when it has opened.
 * updates commit links into related issues when it has pushed.
 
+```mermaid
+flowchart LR
+
+subgraph gh [GitHub]
+  direction TB
+  repo(Repository) -- event --> gh-action(GitHub\nActions)
+  gh-action -- checkout/pull --> bgia(Backlog-GitHub\nintegration action)
+end
+
+subgraph Internet
+  bgia -- REST API --> backlog(Backlog)
+end
+
+user(Developer) -- work --> repo
+user -- check the result --> backlog
+```
+
 ## Usage
 
 ### Set Secrets for Backlog
@@ -195,3 +212,45 @@ $ docker inspect ghcr.io/kazamori/backlog-github-integration-action:latest | jq 
   "version.backlog-github-integration-action": "4c97539929bcd3e9af1989fe03e6dbc9b3851d3e"
 }
 ```
+
+## Release
+
+This action is run as below sequence diagram.
+
+```mermaid
+sequenceDiagram
+
+participant user as User
+participant repo as Repository
+participant action as GitHub Actions
+participant bgia as Backlog-GitHub<br />integration action<br />repository
+participant ghcr as GitHub Container Registry
+
+user->>repo: work
+repo->>action: event
+action->>bgia: checkout [ ${REVISION} / ${TAG} / ${BRANCH} ]
+bgia->>action: action.yml
+Note over action,bgia: action.yml has docker URI to pull
+action->>ghcr: docker pull ghcr.io/kazamori/backlog-github-integration-action:${TAG}
+ghcr->>action: docker image
+action->>action: docker run
+```
+
+Before releasing this action, we must understand two versions to control the workflow.
+
+* action.yml version
+* docker image version
+
+First, the action.yml is controlled in this repository. We can checkout any action.yml by specifying REVISION/TAG/BRANCH. Next, the action.yml has docker URI indicates which version pulls from the container repository. For example, the following configuration uses the version added by `v1` tag.
+
+```yml
+runs:
+  using: 'docker'
+  image: 'docker://ghcr.io/kazamori/backlog-github-integration-action:v1'
+```
+
+Second, the docker image added by `v1` tag would be pulled and then run.
+
+### GitHub Marketplace
+
+* https://github.com/marketplace/actions/backlog-github-integration-action

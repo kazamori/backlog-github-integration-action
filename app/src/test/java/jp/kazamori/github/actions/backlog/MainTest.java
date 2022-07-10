@@ -35,8 +35,10 @@ class MainTest {
 
     static Stream<Arguments> makePushArgsData() {
         return Stream.of(
-                arguments(new String[]{"push", "--commits '[{\"key\": \"value\"}]' --opt param"}, 5, "[{\"key\": \"value\"}]"),
-                arguments(new String[]{"push", "--opt param --commits '[{\"key\": \"handled by \\\"double quote\\\"\"}]'"},
+                arguments(new String[]{
+                        "push", "--commits '[{\"key\": \"value\"}]' --opt param"}, 5, "[{\"key\": \"value\"}]"),
+                arguments(new String[]{
+                        "push", "--opt param --commits '[{\"key\": \"handled by \\\"double", "quote\\\"\"}]'"},
                         5, "[{\"key\": \"handled by \\\"double quote\\\"\"}]"),
                 arguments(new String[]{"push", "--opt 'param' 'a\nb' --commits '[{\"key\": \"value\"}]' --verbose"},
                         7, "[{\"key\": \"value\"}]")

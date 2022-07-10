@@ -2,6 +2,7 @@ package jp.kazamori.github.actions.backlog.common;
 
 import com.google.common.base.Splitter;
 import jp.kazamori.github.actions.backlog.constant.SubCommand;
+import lombok.val;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -33,16 +34,16 @@ public class StrUtil {
     }
 
     private static String extractArgumentsWithoutCommits(String str, int commitsPosition, int quoteEnd) {
-        var s1 = str.substring(0, commitsPosition).trim();
+        val s1 = str.substring(0, commitsPosition).trim();
         if (str.length() == quoteEnd) {
             return s1;
         }
-        var s2 = str.substring(quoteEnd + 1, str.length()).trim();
+        val s2 = str.substring(quoteEnd + 1, str.length()).trim();
         return String.format("%s %s", s1, s2);
     }
 
     private static int getLastIndexFromBeginning(String str, int quoteStart, String quote) {
-        var index = str.indexOf(quote, quoteStart);
+        var index = str.indexOf(quote, quoteStart + 1);
         if (index < 0) {
             return index;
         }
@@ -61,16 +62,19 @@ public class StrUtil {
     private static final String COMMITS_OPTION = "--commits";
 
     public static List<String> extractPushCommandArguments(String str) {
-        var commitsPosition = str.indexOf(COMMITS_OPTION);
+        val commitsPosition = str.indexOf(COMMITS_OPTION);
         if (commitsPosition < 0) {
             return extractStringWithDoubleQuoteToTokens(str);
         }
-        var quoteStart = str.indexOf(SINGLE_QUOTE, commitsPosition + 1);
-        var quoteEnd = getLastIndexFromBeginning(str, quoteStart, SINGLE_QUOTE);
-        var json = str.substring(quoteStart + 1, quoteEnd);
+        val quoteStart = str.indexOf(SINGLE_QUOTE, commitsPosition + 1);
+        val quoteEnd = getLastIndexFromBeginning(str, quoteStart, SINGLE_QUOTE);
+        if (quoteEnd < 0) {
+            throw new IllegalArgumentException("Invalid arguments");
+        }
+        val json = str.substring(quoteStart + 1, quoteEnd);
         // extract arguments without "--commits"
-        var others = extractArgumentsWithoutCommits(str, commitsPosition, quoteEnd);
-        var tokens = extractStringWithDoubleQuoteToTokens(others);
+        val others = extractArgumentsWithoutCommits(str, commitsPosition, quoteEnd);
+        val tokens = extractStringWithDoubleQuoteToTokens(others);
         tokens.add(COMMITS_OPTION);
         tokens.add(json);
         return tokens.stream().filter(e -> !e.trim().isEmpty()).collect(Collectors.toList());

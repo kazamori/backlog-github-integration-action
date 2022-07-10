@@ -65,6 +65,9 @@ public class StrUtilTest {
                 arguments("--verbose --commits '[]'", List.of("--verbose", "--commits", "[]")),
                 arguments("--verbose --commits '[{}, {}]' --repository repo",
                         List.of("--verbose", "--repository", "repo", "--commits", "[{}, {}]")),
+                arguments("--verbose --commits '[{\"key\": \"value 'single quoted' text\"}]' --repository repo",
+                        List.of("--verbose", "--repository", "repo",
+                                "--commits", "[{\"key\": \"value 'single quoted' text\"}]")),
                 arguments("--verbose --commits '[{\"key\": \"value \\\"double quoted\\\" text\"}]' --repository repo",
                         List.of("--verbose", "--repository", "repo",
                                 "--commits", "[{\"key\": \"value \\\"double quoted\\\" text\"}]"))

@@ -41,6 +41,23 @@ public class StrUtil {
         return String.format("%s %s", s1, s2);
     }
 
+    private static int getLastIndexFromBeginning(String str, int quoteStart, String quote) {
+        var index = str.indexOf(quote, quoteStart);
+        if (index < 0) {
+            return index;
+        }
+        int tmp = 0;
+        while (tmp >= 0) {
+            index = tmp;
+            if (str.length() <= index + 1) {
+                return index;
+            }
+            tmp = str.indexOf(quote, index + 1);
+        }
+        return index;
+    }
+
+    private static final String SINGLE_QUOTE = "'";
     private static final String COMMITS_OPTION = "--commits";
 
     public static List<String> extractPushCommandArguments(String str) {
@@ -48,8 +65,8 @@ public class StrUtil {
         if (commitsPosition < 0) {
             return extractStringWithDoubleQuoteToTokens(str);
         }
-        var quoteStart = str.indexOf("'", commitsPosition + 1);
-        var quoteEnd = str.indexOf("'", quoteStart + 1);
+        var quoteStart = str.indexOf(SINGLE_QUOTE, commitsPosition + 1);
+        var quoteEnd = getLastIndexFromBeginning(str, quoteStart, SINGLE_QUOTE);
         var json = str.substring(quoteStart + 1, quoteEnd);
         // extract arguments without "--commits"
         var others = extractArgumentsWithoutCommits(str, commitsPosition, quoteEnd);

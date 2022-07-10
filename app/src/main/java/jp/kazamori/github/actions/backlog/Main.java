@@ -8,11 +8,14 @@ import jp.kazamori.github.actions.backlog.command.PullRequest;
 import jp.kazamori.github.actions.backlog.command.Push;
 import jp.kazamori.github.actions.backlog.common.StrUtil;
 import jp.kazamori.github.actions.backlog.config.ConfigUtil;
+import jp.kazamori.github.actions.backlog.constant.SubCommand;
 import lombok.val;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.HelpCommand;
+
+import java.util.Arrays;
 
 @Command(name = "Backlog GitHub integration action",
         subcommands = {HelpCommand.class},
@@ -21,13 +24,11 @@ public class Main {
 
     @VisibleForTesting
     static String[] ensureArgumentTokens(String[] args) {
-        // for GitHub Actions
-        // it takes inputs as two strings like below
-        // "pull_request" "--repository kazamori/backlog-github-integration-action --pr-number 1"
-        if (args.length != 2) {
+        if (!args[0].equals(SubCommand.PUSH) && args.length != 2) {
             return args;
         }
-        val tokens = StrUtil.extractStringToTokens(args[0], args[1]);
+        val restArgs = Arrays.copyOfRange(args, 1, args.length);
+        val tokens = StrUtil.extractStringToTokens(args[0], String.join(" ", restArgs));
         tokens.add(0, args[0]);
         return tokens.toArray(new String[]{});
     }

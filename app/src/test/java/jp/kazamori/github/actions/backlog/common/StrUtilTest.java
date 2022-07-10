@@ -40,6 +40,10 @@ public class StrUtilTest {
                 arguments("\"a b\" \"c d e\"", List.of("\"a", "b\"", "\"c", "d", "e\"")),
                 arguments("'\"a b\" \"c d e\"'", List.of("\"a b\" \"c d e\"")),
                 arguments("' \"a b\" \"c d e\" '", List.of(" \"a b\" \"c d e\" ")),
+                arguments("' \"a b\" \"c \\\"double d\\\" e\" '", List.of(" \"a b\" \"c \\\"double d\\\" e\" ")),
+                arguments(
+                        "'[{\"author\":{\"name\":\"\\\"Tetsuya Morimoto\\\"\",\"username\":\"t2y\"}]'",
+                        List.of("[{\"author\":{\"name\":\"\\\"Tetsuya Morimoto\\\"\",\"username\":\"t2y\"}]")),
                 arguments(
                         "'[{\"author\":{\"name\":\"Tetsuya Morimoto\",\"username\":\"t2y\"}]'",
                         List.of("[{\"author\":{\"name\":\"Tetsuya Morimoto\",\"username\":\"t2y\"}]"))
@@ -50,6 +54,27 @@ public class StrUtilTest {
     @MethodSource("makeStrWithSingleQuoteData")
     void extractStringWithSingleQuoteToTokens(String str, List<String> expected) {
         val actual = StrUtil.extractStringWithSingleQuoteToTokens(str);
+        assertEquals(expected.size(), actual.size());
+        assertEquals(expected, actual);
+    }
+
+    static Stream<Arguments> makeStrForPushCommandData() {
+        return Stream.of(
+                arguments("", List.of("")),
+                arguments("--verbose", List.of("--verbose")),
+                arguments("--verbose --commits '[]'", List.of("--verbose", "--commits", "[]")),
+                arguments("--verbose --commits '[{}, {}]' --repository repo",
+                        List.of("--verbose", "--repository", "repo", "--commits", "[{}, {}]")),
+                arguments("--verbose --commits '[{\"key\": \"value \\\"double quoted\\\" text\"}]' --repository repo",
+                        List.of("--verbose", "--repository", "repo",
+                                "--commits", "[{\"key\": \"value \\\"double quoted\\\" text\"}]"))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("makeStrForPushCommandData")
+    void extractPushCommandArguments(String str, List<String> expected) {
+        val actual = StrUtil.extractPushCommandArguments(str);
         assertEquals(expected.size(), actual.size());
         assertEquals(expected, actual);
     }

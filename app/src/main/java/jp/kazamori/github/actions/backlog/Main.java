@@ -9,6 +9,7 @@ import jp.kazamori.github.actions.backlog.command.Push;
 import jp.kazamori.github.actions.backlog.common.StrUtil;
 import jp.kazamori.github.actions.backlog.config.ConfigUtil;
 import lombok.val;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.HelpCommand;
@@ -19,7 +20,7 @@ import picocli.CommandLine.HelpCommand;
 public class Main {
 
     @VisibleForTesting
-    static String[] ensureArgumentsIsNotQuoted(String[] args) {
+    static String[] ensureArgumentTokens(String[] args) {
         // for GitHub Actions
         // it takes inputs as two strings like below
         // "pull_request" "--repository kazamori/backlog-github-integration-action --pr-number 1"
@@ -34,12 +35,14 @@ public class Main {
     public static void main(String[] args) {
         val config = ConfigFactory.load();
         ConfigUtil.setLogLevel(config);
+        var logger = LoggerFactory.getLogger(Main.class);
+        logger.debug("arguments length: {}", args.length);
         val backlogClient = BacklogClientUtil.createClient(config);
         val githubClient = GitHubClient.create(config);
         val exitCode = new CommandLine(new Main())
                 .addSubcommand(new PullRequest(backlogClient, githubClient))
                 .addSubcommand(new Push(backlogClient, githubClient))
-                .execute(ensureArgumentsIsNotQuoted(args));
+                .execute(ensureArgumentTokens(args));
         System.exit(exitCode);
     }
 }

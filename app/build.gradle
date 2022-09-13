@@ -16,10 +16,10 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-core:2.13.2'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2'
-    implementation 'com.nulab-inc:backlog4j:2.4.4'
+    implementation 'com.nulab-inc:backlog4j:2.5.1'
     implementation 'com.typesafe:config:1.4.2'
     implementation 'info.picocli:picocli:4.6.3'
-    implementation 'org.kohsuke:github-api:1.303'
+    implementation 'org.kohsuke:github-api:1.308'
 
     // logging
     implementation 'org.slf4j:slf4j-api:1.7.36'
